@@ -1,0 +1,73 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ftth_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ftth_db
+      MYSQL_USER: ftth_user
+      MYSQL_PASSWORD: ftth_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ftth_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  proyecto-final-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: proyecto-final-backend
+    container_name: proyecto-final-backend
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ftth_user
+      MYSQL_PASSWORD: ftth_password
+      MYSQL_DATABASE: ftth_db
+      FLASK_APP: app.py
+      FLASK_ENV: production
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - ftth_network
+    command: python app.py
+
+  proyecto-final-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: proyecto-final-frontend
+    container_name: proyecto-final-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:5000
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - proyecto-final-backend
+    networks:
+      - ftth_network
+    command: npm start
+
+networks:
+  ftth_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+
