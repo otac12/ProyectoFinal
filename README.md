@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# ProyectoFinal
-Proyecto final.
-=======
 # Simulador de Red FTTH GPON
 
 Sistema completo para simular, planificar y analizar redes de fibra óptica FTTH (Fiber To The Home) usando tecnología GPON.
@@ -197,4 +193,3 @@ Proyecto/
 
 Si encuentras problemas, revisa los logs con `docker-compose logs` o reinicia los servicios con `docker-compose restart`.
 
->>>>>>> master
