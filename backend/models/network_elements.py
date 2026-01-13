@@ -1,6 +1,3 @@
-"""
-Clases para modelar elementos de la red GPON
-"""
 
 class OLT:
     """Optical Line Terminal - Terminal de línea óptica"""

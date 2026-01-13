@@ -1,0 +1,71 @@
+═══════════════════════════════════════════════════════════════
+  GUÍA RÁPIDA: Cómo usar en Overleaf (LaTeX Web)
+═══════════════════════════════════════════════════════════════
+
+PASO 1: Ir a Overleaf
+───────────────────────────────────────────────────────────────
+  → Abre: https://www.overleaf.com/
+  → Inicia sesión o crea una cuenta gratuita
+
+PASO 2: Crear nuevo proyecto
+───────────────────────────────────────────────────────────────
+  → Click en "New Project"
+  → Selecciona "Blank Project"
+  → Dale un nombre (ej: "Documento FTTH GPON")
+
+PASO 3: Subir o pegar el archivo
+───────────────────────────────────────────────────────────────
+  OPCIÓN A - Subir archivo:
+    → Click en "Upload" (botón verde arriba)
+    → Selecciona: documento_proyecto.tex
+    → Espera a que compile automáticamente
+
+  OPCIÓN B - Copiar y pegar:
+    → Abre documento_proyecto.tex en tu editor
+    → Selecciona TODO (Ctrl+A)
+    → Copia (Ctrl+C)
+    → En Overleaf, pega en main.tex (Ctrl+V)
+    → Guarda (Ctrl+S)
+    → Overleaf compilará automáticamente
+
+PASO 4: Verificar compilación
+───────────────────────────────────────────────────────────────
+  → Verifica que el compilador sea "pdfLaTeX"
+    (menú superior → Menu → Compiler → pdfLaTeX)
+  
+  → Si hay errores, espera unos segundos y haz clic en "Recompile"
+
+PASO 5: Descargar PDF
+───────────────────────────────────────────────────────────────
+  → Click en el botón "Download PDF" (arriba izquierda)
+  → O usa: Menu → Download → PDF
+
+═══════════════════════════════════════════════════════════════
+  NOTAS IMPORTANTES
+═══════════════════════════════════════════════════════════════
+
+✓ Todos los paquetes necesarios ya están disponibles en Overleaf
+✓ No necesitas instalar nada adicional
+✓ El documento está optimizado para funcionar directamente
+✓ Los diagramas TikZ se generan automáticamente
+✓ Puede tardar 30-60 segundos en compilar la primera vez
+
+═══════════════════════════════════════════════════════════════
+  PROBLEMAS COMUNES
+═══════════════════════════════════════════════════════════════
+
+❌ Error: "Missing \end{document}"
+  → Asegúrate de copiar TODO el contenido del archivo
+
+❌ Referencias no funcionan
+  → Compila dos veces (Overleaf lo hace automáticamente)
+  → Si no, haz clic en "Recompile" otra vez
+
+❌ Diagramas no aparecen
+  → Espera un poco más (TikZ puede tardar)
+  → Haz clic en "Recompile"
+
+═══════════════════════════════════════════════════════════════
+
+¡Listo! Tu documento debería compilar sin problemas en Overleaf.
+

@@ -1,0 +1,883 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,calc,arrows.meta}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{etoolbox}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+
+\geometry{margin=2.5cm}
+
+% Solución para conflictos babel-TikZ con caracteres especiales
+\AtBeginEnvironment{tikzpicture}{\shorthandoff{<>}}
+\AtEndEnvironment{tikzpicture}{\shorthandon{<>}}
+
+% Configuración de código
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    showstringspaces=false
+}
+
+\lstdefinestyle{javascript}{
+    language=JavaScript,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+}
+
+% Colores personalizados
+\definecolor{primaryblue}{RGB}{33,150,243}
+\definecolor{primaryorange}{RGB}{255,152,0}
+\definecolor{primarygreen}{RGB}{76,175,80}
+
+% Metadata
+\title{\textbf{Simulador de Red FTTH GPON}\\
+       \large{Sistema Completo de Simulación y Análisis de Redes Ópticas}}
+\author{Documentación Técnica del Proyecto}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+% ============================================================================
+% RESUMEN EJECUTIVO
+% ============================================================================
+\section{Resumen Ejecutivo}
+
+Este documento presenta la documentación completa del \textbf{Simulador de Red FTTH GPON}, un sistema integral desarrollado para simular, planificar y analizar redes de fibra óptica FTTH (Fiber To The Home) utilizando tecnología GPON (Gigabit Passive Optical Network).
+
+El sistema está compuesto por:
+\begin{itemize}
+    \item \textbf{Backend}: API REST desarrollada en Python/Flask con MySQL
+    \item \textbf{Frontend}: Interfaz web interactiva en React.js
+    \item \textbf{Simulador}: Motor de simulación de tráfico con algoritmo DBA (Dynamic Bandwidth Allocation)
+    \item \textbf{Modelado}: Sistema completo de elementos de red óptica (OLT, ONU, Splitter, Fiber)
+\end{itemize}
+
+\subsection{Características Principales}
+\begin{enumerate}
+    \item Creación de topologías GPON personalizables (Star, Bus, Ring, Tree)
+    \item Visualización interactiva de redes con diagramas
+    \item Simulación de tráfico Triple Play (video, internet, voz)
+    \item Cálculo de power budget óptico
+    \item Algoritmo DBA IPACT para asignación de ancho de banda
+    \item Métricas de rendimiento en tiempo real
+    \item Base de datos persistente para configuraciones
+\end{enumerate}
+
+% ============================================================================
+% INTRODUCCIÓN
+% ============================================================================
+\section{Introducción}
+
+\subsection{Contexto Tecnológico}
+
+GPON (Gigabit Passive Optical Network) es una tecnología de acceso de banda ancha que utiliza fibra óptica para proporcionar servicios de comunicación a usuarios finales. Esta tecnología permite:
+
+\begin{itemize}
+    \item Altas velocidades de transmisión (hasta 2.5 Gbps downstream)
+    \item Distancias de hasta 20 km sin regeneración
+    \item Soporte para múltiples servicios (Triple Play)
+    \item Infraestructura pasiva (menor costo operativo)
+\end{itemize}
+
+\subsection{Objetivos del Proyecto}
+
+El objetivo principal es desarrollar una herramienta de simulación que permita:
+
+\begin{enumerate}
+    \item \textbf{Diseño}: Crear y configurar topologías de red GPON
+    \item \textbf{Análisis}: Calcular parámetros técnicos (power budget, pérdidas)
+    \item \textbf{Simulación}: Modelar comportamiento de tráfico en la red
+    \item \textbf{Optimización}: Evaluar diferentes configuraciones y escenarios
+\end{enumerate}
+
+% ============================================================================
+% ARQUITECTURA DEL SISTEMA
+% ============================================================================
+\section{Arquitectura del Sistema}
+
+\subsection{Arquitectura General}
+
+El sistema sigue una arquitectura de tres capas:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=2cm,
+    rect/.style={rectangle, draw=primaryblue, fill=primaryblue!20, thick, minimum width=3cm, minimum height=1.5cm, align=center, rounded corners},
+    arrow/.style={->, >=stealth, thick}
+]
+    % Capa Presentación
+    \node[rect, fill=primarygreen!30] (frontend) at (0,6) {Frontend\\React.js};
+    
+    % Capa Lógica
+    \node[rect, fill=primaryblue!30] (backend) at (0,3.5) {Backend\\Flask API};
+    
+    % Capa Datos
+    \node[rect, fill=primaryorange!30] (database) at (0,1) {Base de Datos\\MySQL};
+    
+    % Flechas (usar modo matemático para proteger caracteres especiales)
+    \draw[arrow] (frontend) -- node[right] {\texttt{HTTP/REST}} (backend);
+    \draw[arrow] (backend) -- node[right] {\texttt{SQL}} (database);
+    \draw[arrow] (backend) to[bend left=30] node[above] {\texttt{JSON}} (frontend);
+    \draw[arrow] (database) to[bend left=30] node[below] {Resultados} (backend);
+    
+\end{tikzpicture}
+\caption{Arquitectura de tres capas del sistema}
+\end{figure}
+
+\subsection{Componentes Principales}
+
+\subsubsection{Backend (Python/Flask)}
+
+El backend está construido con:
+\begin{itemize}
+    \item \textbf{Flask}: Framework web ligero
+    \item \textbf{SQLAlchemy}: ORM para gestión de base de datos
+    \item \textbf{MySQL}: Sistema de gestión de base de datos
+    \item \textbf{SimPy}: Librería de simulación discreta de eventos
+    \item \textbf{NumPy}: Cálculos numéricos y estadísticos
+\end{itemize}
+
+\subsubsection{Frontend (React.js)}
+
+El frontend utiliza:
+\begin{itemize}
+    \item \textbf{React 18}: Librería para interfaces de usuario
+    \item \textbf{Material-UI}: Componentes de interfaz
+    \item \textbf{ReactFlow}: Visualización de grafos y diagramas
+    \item \textbf{Recharts}: Gráficos y visualizaciones
+    \item \textbf{Axios}: Cliente HTTP
+\end{itemize}
+
+\subsubsection{Infraestructura}
+
+El despliegue se realiza mediante:
+\begin{itemize}
+    \item \textbf{Docker}: Contenedores para cada servicio
+    \item \textbf{Docker Compose}: Orquestación de servicios
+    \item \textbf{MySQL 8.0}: Base de datos relacional
+\end{itemize}
+
+% ============================================================================
+% MODELADO DE ELEMENTOS DE RED
+% ============================================================================
+\section{Modelado de Elementos de Red}
+
+\subsection{Clases Principales}
+
+El sistema modela los siguientes elementos de red GPON:
+
+\subsubsection{OLT (Optical Line Terminal)}
+
+El OLT es el terminal de línea óptica ubicado en la central del proveedor.
+
+\begin{table}[H]
+\centering
+\caption{Características del OLT}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Parámetro} & \textbf{Valor} \\
+\midrule
+Potencia de transmisión (TX) & 2.5 dBm \\
+Sensibilidad de recepción (RX) & -27 dBm \\
+Capacidad total & 2500 Mbps \\
+Power Budget & 29.5 dB \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{ONU (Optical Network Unit)}
+
+Las ONUs son los dispositivos finales ubicados en las instalaciones del cliente.
+
+\begin{table}[H]
+\centering
+\caption{Características de la ONU}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Parámetro} & \textbf{Valor} \\
+\midrule
+Potencia de transmisión (TX) & 1.5 dBm \\
+Sensibilidad de recepción (RX) & -24 dBm \\
+Rango de tráfico & 0.064 - 25 Mbps \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Splitter Óptico}
+
+El splitter divide la señal óptica entre múltiples ONUs.
+
+\begin{table}[H]
+\centering
+\caption{Pérdidas por Splitting}
+\begin{tabular}{@{}cc@{}}
+\toprule
+\textbf{Ratio} & \textbf{Pérdida (dB)} \\
+\midrule
+1:8 & 9.0 \\
+1:16 & 12.0 \\
+1:32 & 15.0 \\
+1:64 & 18.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La fórmula utilizada es:
+\begin{equation}
+L_{split} = 10 \times \log_{10}(N)
+\end{equation}
+
+donde \(N\) es el número de puertos de salida.
+
+\subsubsection{Fibra Óptica}
+
+Las fibras tienen las siguientes características:
+
+\begin{table}[H]
+\centering
+\caption{Parámetros de Fibra Óptica}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Parámetro} & \textbf{Valor} \\
+\midrule
+Atenuación típica & 0.2 dB/km \\
+Pérdida por empalme & 0.1 dB cada 2 km \\
+Dispersión & 17 ps/(nm·km) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================================
+% CÓDIGO EXPLICADO
+% ============================================================================
+\section{Explicación del Código}
+
+\subsection{Creación de Topología en Estrella}
+
+El código siguiente muestra cómo se crea una topología GPON estándar en estrella:
+
+\begin{lstlisting}[caption=Creación de topología en estrella]
+def _create_star_topology(self, num_onus=32, split_ratio="1:32"):
+    """Generar topología en estrella (GPON estándar)"""
+    # Crear OLT
+    self.olt = OLT(id="OLT-1", name="OLT Principal")
+    
+    # Crear splitter central
+    splitter = Splitter(
+        id="SPLIT-1", 
+        name=f"Splitter {split_ratio}", 
+        ratio=split_ratio
+    )
+    self.add_splitter(splitter)
+    self.olt.connect_splitter(splitter)
+    
+    # Crear fibra OLT-Splitter
+    fiber_olt_splitter = OpticalFiber(
+        id="FIBER-OLT-SPLIT",
+        name="OLT to Splitter",
+        length=2.0  # 2 km
+    )
+    fiber_olt_splitter.connect(self.olt, splitter)
+    self.add_fiber(fiber_olt_splitter)
+    
+    # Crear ONUs conectadas al splitter central
+    for i in range(num_onus):
+        onu = ONU(id=f"ONU-{i+1}", name=f"ONU {i+1}")
+        self.add_onu(onu)
+        splitter.connect_onu(onu)
+        
+        # Crear fibra Splitter-ONU
+        fiber = OpticalFiber(
+            id=f"FIBER-{i+1}",
+            name=f"Splitter to ONU {i+1}",
+            length=3.0 + (i * 0.1)  # Variar longitudes
+        )
+        fiber.connect(splitter, onu)
+        self.add_fiber(fiber)
+\end{lstlisting}
+
+\subsection{Cálculo de Power Budget}
+
+El cálculo del power budget es crítico para validar que la señal óptica llegue con suficiente potencia:
+
+\begin{lstlisting}[caption=Cálculo de power budget]
+def calculate_power_budget_path(self, onu):
+    """Calcular power budget para una ruta OLT-ONU"""
+    if not self.olt or not onu.connected_splitter:
+        return None
+    
+    # Calcular power budget base
+    power_budget = self.olt.calculate_power_budget()
+    # power_budget = TX_power - RX_sensitivity
+    
+    # Pérdida en splitter
+    splitter_loss = onu.connected_splitter.split_loss
+    
+    # Pérdidas en fibras
+    total_fiber_loss = 0
+    total_splice_loss = 0
+    
+    for fiber in self.fibers:
+        if fiber.to_element == onu:
+            fiber_attenuation = fiber.calculate_loss()
+            splice_loss = 0.1 * (int(fiber.length / 2) + 1)
+            total_fiber_loss += fiber_attenuation
+            total_splice_loss += splice_loss
+    
+    total_loss = splitter_loss + total_fiber_loss + total_splice_loss
+    
+    # Margen de seguridad (3 dB)
+    margin = 3.0
+    available_power = power_budget - total_loss - margin
+    
+    return {
+        "power_budget": power_budget,
+        "total_loss": total_loss,
+        "margin": margin,
+        "available_power": available_power,
+        "is_valid": available_power >= 0
+    }
+\end{lstlisting}
+
+La fórmula completa es:
+\begin{equation}
+P_{available} = (P_{TX} - P_{RX}) - L_{split} - L_{fiber} - L_{splice} - M
+\end{equation}
+
+donde:
+\begin{itemize}
+    \item \(P_{TX}\): Potencia de transmisión del OLT
+    \item \(P_{RX}\): Sensibilidad de recepción del OLT
+    \item \(L_{split}\): Pérdida por splitting
+    \item \(L_{fiber}\): Pérdida en fibras
+    \item \(L_{splice}\): Pérdida por empalmes
+    \item \(M\): Margen de seguridad (3 dB)
+\end{itemize}
+
+\subsection{Algoritmo DBA (Dynamic Bandwidth Allocation)}
+
+El algoritmo DBA implementa la estrategia IPACT (Interleaved Polling with Adaptive Cycle Time):
+
+\begin{lstlisting}[caption=Algoritmo DBA IPACT]
+def allocate_bandwidth(self, onu_requests, total_capacity=None):
+    """Asignar ancho de banda usando estrategia IPACT"""
+    if total_capacity is None:
+        total_capacity = self.total_capacity
+    
+    allocation = {}
+    remaining = total_capacity
+    
+    # IPACT: asignar en orden de llegada
+    sorted_requests = sorted(onu_requests.items())
+    
+    for onu_id, requested in sorted_requests:
+        # Asignar mínimo entre lo solicitado y lo disponible
+        granted = min(requested, remaining)
+        allocation[onu_id] = {
+            'requested': requested,
+            'granted': granted,
+            'utilization': (granted / requested * 100) 
+                          if requested > 0 else 0
+        }
+        remaining -= granted
+        
+        if remaining <= 0:
+            # Si no hay más capacidad, asignar 0 a las restantes
+            break
+    
+    return {
+        'allocations': allocation,
+        'total_granted': sum(a['granted'] 
+                            for a in allocation.values()),
+        'global_utilization': (total_granted / total_capacity * 100)
+    }
+\end{lstlisting}
+
+\subsection{Simulador de Tráfico}
+
+El simulador genera tráfico Triple Play con diferentes patrones:
+
+\begin{lstlisting}[caption=Generación de tráfico Triple Play]
+def setup_onus(self, traffic_profiles=None):
+    """Configurar generadores de tráfico para ONUs"""
+    if traffic_profiles is None:
+        # Perfiles por defecto: Triple Play
+        for i in range(self.num_onus):
+            # Mezcla de servicios
+            service_type = random.choice([
+                'video', 'internet', 'voice'
+            ])
+            
+            if service_type == 'video':
+                rate = random.uniform(10, 25)  # Mbps
+                pattern = 'constant'
+            elif service_type == 'internet':
+                rate = random.uniform(5, 15)   # Mbps
+                pattern = 'poisson'
+            else:  # voice
+                rate = random.uniform(0.064, 0.1)  # Mbps
+                pattern = 'constant'
+            
+            generator = TrafficGenerator(
+                self.env,
+                f'ONU-{i+1}',
+                pattern,
+                rate
+            )
+            self.generators.append(generator)
+            self.env.process(generator.traffic_process())
+\end{lstlisting}
+
+% ============================================================================
+% DIAGRAMAS DE TOPOLOGÍAS
+% ============================================================================
+\section{Diagramas de Topologías}
+
+\subsection{Topología en Estrella (Star)}
+
+La topología en estrella es la más común en GPON:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    olt/.style={circle, draw=primaryblue, fill=primaryblue!30, 
+                thick, minimum size=1cm},
+    splitter/.style={rectangle, draw=primaryorange, fill=primaryorange!30, 
+                     thick, minimum size=0.8cm, rounded corners},
+    onu/.style={circle, draw=primarygreen, fill=primarygreen!30, 
+                thick, minimum size=0.6cm},
+    fiber/.style={draw=gray, thick}
+]
+    % OLT
+    \node[olt] (olt) at (0, 4) {OLT};
+    
+    % Splitter
+    \node[splitter] (split) at (0, 2) {SPL};
+    
+    % ONUs (8 para claridad)
+    \foreach \i in {1,...,8} {
+        \pgfmathsetmacro{\angle}{(\i-1)*360/8}
+        \pgfmathsetmacro{\x}{2*cos(\angle)}
+        \pgfmathsetmacro{\y}{0.5*sin(\angle)}
+        \node[onu] (onu\i) at (\x, \y) {ONU\i};
+        \draw[fiber] (split) -- (onu\i);
+    }
+    
+    % Conexión OLT-Splitter
+    \draw[fiber] (olt) -- (split);
+    
+    % Etiquetas
+    \node at (0, 3.2) {\tiny Fibra OLT-Splitter};
+    \node at (0, 1.2) {\tiny Splitter 1:32};
+    
+\end{tikzpicture}
+\caption{Topología GPON en estrella con splitter central}
+\end{figure}
+
+\subsection{Topología en Árbol (Tree)}
+
+La topología en árbol permite múltiples niveles de splitters:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.2cm,
+    olt/.style={circle, draw=primaryblue, fill=primaryblue!30, 
+                thick, minimum size=1cm},
+    splitter/.style={rectangle, draw=primaryorange, fill=primaryorange!30, 
+                     thick, minimum size=0.7cm, rounded corners},
+    onu/.style={circle, draw=primarygreen, fill=primarygreen!30, 
+                thick, minimum size=0.5cm},
+    fiber/.style={draw=gray, thick}
+]
+    % OLT
+    \node[olt] (olt) at (0, 5) {OLT};
+    
+    % Splitter raíz
+    \node[splitter] (root) at (0, 4) {Root};
+    
+    % Splitters intermedios
+    \node[splitter] (split1) at (-2, 3) {S1};
+    \node[splitter] (split2) at (0, 3) {S2};
+    \node[splitter] (split3) at (2, 3) {S3};
+    
+    % ONUs - Primera fila
+    \node[onu] (onu1) at (-2.5, 1.5) {ONU1};
+    \node[onu] (onu2) at (0, 1.5) {ONU2};
+    \node[onu] (onu3) at (2.5, 1.5) {ONU3};
+    
+    % ONUs - Segunda fila
+    \node[onu] (onu4) at (-2.5, 1) {ONU4};
+    \node[onu] (onu5) at (0, 1) {ONU5};
+    \node[onu] (onu6) at (2.5, 1) {ONU6};
+    
+    % Conexiones desde splitters
+    \draw[fiber] (split1) -- (onu1);
+    \draw[fiber] (split1) -- (onu4);
+    \draw[fiber] (split2) -- (onu2);
+    \draw[fiber] (split2) -- (onu5);
+    \draw[fiber] (split3) -- (onu3);
+    \draw[fiber] (split3) -- (onu6);
+    
+    % Conexiones
+    \draw[fiber] (olt) -- (root);
+    \draw[fiber] (root) -- (split1);
+    \draw[fiber] (root) -- (split2);
+    \draw[fiber] (root) -- (split3);
+    
+\end{tikzpicture}
+\caption{Topología GPON en árbol con múltiples niveles}
+\end{figure}
+
+\subsection{Flujo de Datos en GPON}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    box/.style={rectangle, draw=black, fill=gray!10, 
+                thick, minimum width=3cm, minimum height=1cm, 
+                align=center},
+    arrow/.style={->, >=stealth, thick, blue}
+]
+    \node[box] (onu1) {ONU 1};
+    \node[box] (onu2) [below of=onu1] {ONU 2};
+    \node[box] (onu3) [below of=onu2] {ONU N};
+    
+    \node[box, fill=orange!30] (splitter) [right of=onu2, xshift=2cm] {Splitter};
+    
+    \node[box, fill=blue!30] (olt) [right of=splitter, xshift=2cm] {OLT};
+    
+    \draw[arrow] (onu1) -- node[above] {Upstream} (splitter);
+    \draw[arrow] (onu2) -- (splitter);
+    \draw[arrow] (onu3) -- node[below] {TDM} (splitter);
+    
+    \draw[arrow] (splitter) -- (olt);
+    
+    \draw[arrow, dashed] (olt) -- node[above] {Downstream} (splitter);
+    \draw[arrow, dashed] (splitter) -- (onu1);
+    \draw[arrow, dashed] (splitter) -- (onu2);
+    \draw[arrow, dashed] (splitter) -- (onu3);
+    
+    \node at (-1, -1.5) {Upstream: TDM};
+    \node at (4, -1.5) {Downstream: Broadcast};
+    
+\end{tikzpicture}
+\caption{Flujo bidireccional de datos en GPON}
+\end{figure}
+
+% ============================================================================
+% ARQUITECTURA DE LA APLICACIÓN
+% ============================================================================
+\section{Arquitectura de la Aplicación}
+
+\subsection{Diagrama de Clases}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    class/.style={rectangle, draw=black, fill=blue!10, 
+                  thick, minimum width=4cm, minimum height=1.5cm, 
+                  align=center, rounded corners},
+    arrow/.style={->, >=stealth, thick}
+]
+    \node[class] (network) {OpticalNetwork};
+    \node[class] (olt) [below left of=network, xshift=-1cm, yshift=-1cm] {OLT};
+    \node[class] (onu) [below of=network, yshift=-1cm] {ONU};
+    \node[class] (splitter) [below right of=network, xshift=1cm, yshift=-1cm] {Splitter};
+    \node[class] (fiber) [right of=network, xshift=2cm] {OpticalFiber};
+    
+    \draw[arrow] (network) -- node[left] {contiene} (olt);
+    \draw[arrow] (network) -- node[left] {contiene} (onu);
+    \draw[arrow] (network) -- node[left] {contiene} (splitter);
+    \draw[arrow] (network) -- node[above] {contiene} (fiber);
+    \draw[arrow] (olt) -- node[above, sloped] {conecta} (splitter);
+    \draw[arrow] (splitter) -- node[above, sloped] {conecta} (onu);
+    \draw[arrow] (fiber) -- node[below, sloped] {une} (olt);
+    \draw[arrow] (fiber) -- node[below, sloped] {une} (splitter);
+    \draw[arrow] (fiber) -- node[below, sloped] {une} (onu);
+    
+\end{tikzpicture}
+\caption{Diagrama de clases simplificado del modelo de red}
+\end{figure}
+
+\subsection{Flujo de Datos en la API}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    process/.style={rectangle, draw=black, fill=green!20, 
+                    thick, minimum width=3cm, minimum height=1cm, 
+                    align=center, rounded corners},
+    data/.style={rectangle, draw=black, fill=yellow!20, 
+                 thick, minimum width=2.5cm, minimum height=1cm, 
+                 align=center, rounded corners},
+    arrow/.style={->, >=stealth, thick}
+]
+    \node[process] (client) {Cliente React};
+    \node[process] (api) [right of=client, xshift=2cm] {Flask API};
+    \node[process] (db) [right of=api, xshift=2cm] {MySQL};
+    \node[process] (sim) [below of=api, yshift=-1.5cm] {Simulador};
+    
+    \node[data] (json1) [below of=client, yshift=-0.5cm] {JSON Request};
+    \node[data] (json2) [above of=client, yshift=0.5cm] {JSON Response};
+    
+    \draw[arrow] (client) -- (api);
+    \draw[arrow] (api) -- (db);
+    \draw[arrow] (db) -- (api);
+    \draw[arrow] (api) -- (sim);
+    \draw[arrow] (sim) -- (api);
+    \draw[arrow] (api) -- (client);
+    
+\end{tikzpicture}
+\caption{Flujo de datos en la aplicación}
+\end{figure}
+
+% ============================================================================
+% TABLAS DE ESPECIFICACIONES
+% ============================================================================
+\section{Especificaciones Técnicas}
+
+\subsection{Especificaciones del Sistema}
+
+\begin{table}[H]
+\centering
+\caption{Requisitos del Sistema}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Componente} & \textbf{Especificación} \\
+\midrule
+Python & $\geq$ 3.8 \\
+Node.js & $\geq$ 16.0 \\
+MySQL & 8.0 \\
+Docker & $\geq$ 20.0 \\
+RAM Mínima & 4 GB \\
+Puerto Frontend & 3001 \\
+Puerto Backend & 5000 \\
+Puerto MySQL & 3306 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Endpoints de la API}
+
+\begin{longtable}{@{}p{4cm}p{7cm}p{3cm}@{}}
+\toprule
+\textbf{Endpoint} & \textbf{Descripción} & \textbf{Método} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Endpoint} & \textbf{Descripción} & \textbf{Método} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{{Continúa en la siguiente página}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+/api/health & Verificación de salud del servidor & GET \\
+/api/topologies & Obtener todas las topologías & GET \\
+/api/topologies & Crear nueva topología & POST \\
+/api/topologies/<id> & Obtener topología específica & GET \\
+/api/topologies/<id>/power-budget & Calcular power budget & GET \\
+/api/simulations & Crear y ejecutar simulación & POST \\
+/api/simulations/<id> & Obtener resultados de simulación & GET \\
+/api/dba/allocate & Calcular asignación DBA & POST \\
+\end{longtable}
+
+\subsection{Modelo de Base de Datos}
+
+\begin{table}[H]
+\centering
+\caption{Estructura de Tablas}
+\begin{tabular}{@{}lp{8cm}@{}}
+\toprule
+\textbf{Tabla} & \textbf{Descripción} \\
+\midrule
+network\_topologies & Almacena configuraciones de topologías \\
+network\_elements & Almacena elementos individuales (OLT, ONU, etc.) \\
+simulations & Almacena ejecuciones de simulaciones \\
+performance\_metrics & Almacena métricas de rendimiento por ONU \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================================
+% CÁLCULOS Y FÓRMULAS
+% ============================================================================
+\section{Fórmulas y Cálculos}
+
+\subsection{Power Budget}
+
+El power budget total se calcula como:
+
+\begin{equation}
+PB_{total} = P_{TX,OLT} - P_{RX,OLT}
+\end{equation}
+
+\subsection{Pérdidas en la Red}
+
+Las pérdidas totales incluyen:
+
+\begin{equation}
+L_{total} = L_{splitter} + L_{fiber} + L_{splice} + M
+\end{equation}
+
+donde:
+\begin{align}
+L_{fiber} &= \alpha \times L \\
+L_{splice} &= 0.1 \times \left\lfloor \frac{L}{2} \right\rfloor \\
+L_{splitter} &= 10 \times \log_{10}(N)
+\end{align}
+
+\subsection{Disponibilidad de Potencia}
+
+La potencia disponible al final del enlace es:
+
+\begin{equation}
+P_{available} = PB_{total} - L_{total}
+\end{equation}
+
+La red es válida si \(P_{available} \geq 0\).
+
+\subsection{Throughput}
+
+El throughput de una ONU se calcula como:
+
+\begin{equation}
+Throughput = \frac{Bytes \times 8}{Tiempo} \quad \text{(Mbps)}
+\end{equation}
+
+\subsection{Utilización del Ancho de Banda}
+
+La utilización global del sistema:
+
+\begin{equation}
+U_{global} = \frac{BW_{asignado}}{BW_{total}} \times 100\%
+\end{equation}
+
+% ============================================================================
+% CONCLUSIONES
+% ============================================================================
+\section{Conclusiones}
+
+Este proyecto implementa un simulador completo de redes FTTH GPON que permite:
+
+\begin{enumerate}
+    \item \textbf{Diseño eficiente}: Crear topologías personalizadas con validación automática
+    \item \textbf{Análisis preciso}: Cálculo de power budget y pérdidas ópticas
+    \item \textbf{Simulación realista}: Modelado de tráfico Triple Play con diferentes patrones
+    \item \textbf{Optimización}: Algoritmo DBA para asignación dinámica de ancho de banda
+    \item \textbf{Visualización}: Interfaz interactiva para análisis y presentación
+\end{enumerate}
+
+\subsection{Mejoras Futuras}
+
+Posibles extensiones del sistema:
+
+\begin{itemize}
+    \item Implementación de algoritmos DBA avanzados (EPON, XG-PON)
+    \item Modelado de pérdidas por conexiones y conectores
+    \item Simulación de fallos y redundancia
+    \item Optimización automática de topologías
+    \item Integración con herramientas de planificación GIS
+\end{itemize}
+
+% ============================================================================
+% REFERENCIAS
+% ============================================================================
+\section{Referencias}
+
+\begin{itemize}
+    \item ITU-T G.984.1-3: Gigabit-capable Passive Optical Networks (GPON)
+    \item ITU-T G.984.4: OMCI (ONU Management and Control Interface)
+    \item IEEE 802.3ah: Ethernet Passive Optical Network (EPON)
+    \item Flask Documentation: \url{https://flask.palletsprojects.com/}
+    \item React Documentation: \url{https://react.dev/}
+    \item SimPy Documentation: \url{https://simpy.readthedocs.io/}
+\end{itemize}
+
+% ============================================================================
+% APÉNDICES
+% ============================================================================
+\appendix
+
+\section{Instalación y Configuración}
+
+\subsection{Requisitos Previos}
+
+\begin{lstlisting}[language=bash, caption=Comandos de instalación]
+# Clonar repositorio
+git clone <url-repositorio>
+cd Proyecto
+
+# Iniciar servicios con Docker Compose
+docker-compose up --build
+\end{lstlisting}
+
+\subsection{Configuración de Variables de Entorno}
+
+\begin{lstlisting}[caption=Variables de entorno]
+MYSQL_HOST=mysql
+MYSQL_PORT=3306
+MYSQL_USER=ftth_user
+MYSQL_PASSWORD=ftth_password
+MYSQL_DATABASE=ftth_db
+FLASK_APP=app.py
+REACT_APP_API_URL=http://localhost:5000
+\end{lstlisting}
+
+\section{Glosario de Términos}
+
+\begin{description}
+    \item[FTTH] Fiber To The Home - Fibra hasta el hogar
+    \item[GPON] Gigabit Passive Optical Network - Red óptica pasiva de gigabits
+    \item[OLT] Optical Line Terminal - Terminal de línea óptica
+    \item[ONU] Optical Network Unit - Unidad de red óptica
+    \item[DBA] Dynamic Bandwidth Allocation - Asignación dinámica de ancho de banda
+    \item[IPACT] Interleaved Polling with Adaptive Cycle Time
+    \item[Power Budget] Presupuesto de potencia óptica disponible
+    \item[Splitter] Divisor óptico pasivo
+    \item[TDM] Time Division Multiplexing - Multiplexación por división de tiempo
+\end{description}
+
+\end{document}
+

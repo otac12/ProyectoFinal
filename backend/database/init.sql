@@ -1,4 +1,3 @@
--- Crear base de datos si no existe
 CREATE DATABASE IF NOT EXISTS ftth_db;
 
 USE ftth_db;

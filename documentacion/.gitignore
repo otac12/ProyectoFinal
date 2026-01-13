@@ -1,0 +1,20 @@
+# Archivos generados por LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.pdf
+*.bbl
+*.blg
+*.idx
+*.ilg
+*.ind
+
+# Solo mantener el archivo fuente .tex
+!documento_proyecto.tex
+
